@@ -8,15 +8,15 @@ NOTE: Lumen is not officially supported by this package. However, the following 
 First, install the package via Composer:
 
 ``` bash
-composer require spatie/laravel-permission
+composer require offspring/laravel-permission
 ```
 
 Copy the required files:
 
 ```bash
 mkdir -p config
-cp vendor/spatie/laravel-permission/config/permission.php config/permission.php
-cp vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub database/migrations/2018_01_01_000000_create_permission_tables.php
+cp vendor/offspring/laravel-permission/config/permission.php config/permission.php
+cp vendor/offspring/laravel-permission/database/migrations/create_permission_tables.php.stub database/migrations/2018_01_01_000000_create_permission_tables.php
 ```
 
 You will also need to create another configuration file at `config/auth.php`. Get it on the Laravel repository or just run the following command:
@@ -30,8 +30,8 @@ Then, in `bootstrap/app.php`, register the middlewares:
 ```php
 $app->routeMiddleware([
     'auth'       => App\Http\Middleware\Authenticate::class,
-    'permission' => Spatie\Permission\Middlewares\PermissionMiddleware::class,
-    'role'       => Spatie\Permission\Middlewares\RoleMiddleware::class,
+    'permission' => Offspring\Permission\Middlewares\PermissionMiddleware::class,
+    'role'       => Offspring\Permission\Middlewares\RoleMiddleware::class,
 ]);
 ```
 
@@ -40,7 +40,7 @@ Also register the config file, service provider, and cache alias:
 ```php
 $app->configure('permission');
 $app->alias('cache', \Illuminate\Cache\CacheManager::class);  // if you don't have this already
-$app->register(Spatie\Permission\PermissionServiceProvider::class);
+$app->register(Offspring\Permission\PermissionServiceProvider::class);
 ```
 
 Now, run your migrations:

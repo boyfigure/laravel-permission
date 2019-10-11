@@ -1,13 +1,13 @@
 <?php
 
-namespace Spatie\Permission\Test;
+namespace Offspring\Permission\Test;
 
-use Spatie\Permission\Contracts\Role;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Exceptions\RoleDoesNotExist;
-use Spatie\Permission\Exceptions\GuardDoesNotMatch;
-use Spatie\Permission\Exceptions\RoleAlreadyExists;
-use Spatie\Permission\Exceptions\PermissionDoesNotExist;
+use Offspring\Permission\Contracts\Role;
+use Offspring\Permission\Models\Permission;
+use Offspring\Permission\Exceptions\RoleDoesNotExist;
+use Offspring\Permission\Exceptions\GuardDoesNotMatch;
+use Offspring\Permission\Exceptions\RoleAlreadyExists;
+use Offspring\Permission\Exceptions\PermissionDoesNotExist;
 
 class RoleTest extends TestCase
 {

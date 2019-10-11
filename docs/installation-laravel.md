@@ -8,7 +8,7 @@ This package can be used in Laravel 5.8 or higher.
 You can install the package via composer:
 
 ``` bash
-composer require spatie/laravel-permission
+composer require offspring/laravel-permission
 ```
 
 The service provider will automatically get registered. Or you may manually add the service provider in your `config/app.php` file:
@@ -16,14 +16,14 @@ The service provider will automatically get registered. Or you may manually add 
 ```php
 'providers' => [
     // ...
-    Spatie\Permission\PermissionServiceProvider::class,
+    Offspring\Permission\PermissionServiceProvider::class,
 ];
 ```
 
-You must publish [the migration](https://github.com/spatie/laravel-permission/blob/master/database/migrations/create_permission_tables.php.stub) with:
+You must publish [the migration](https://github.com/offspring/laravel-permission/blob/master/database/migrations/create_permission_tables.php.stub) with:
 
 ```bash
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
+php artisan vendor:publish --provider="Offspring\Permission\PermissionServiceProvider" --tag="migrations"
 ```
 
 If you're using UUIDs or GUIDs for your `User` models you can update the `create_permission_tables.php` migration and replace `$table->unsignedBigInteger($columnNames['model_morph_key'])` with `$table->uuid($columnNames['model_morph_key'])`.
@@ -38,10 +38,10 @@ php artisan migrate
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="config"
+php artisan vendor:publish --provider="Offspring\Permission\PermissionServiceProvider" --tag="config"
 ```
 
-When published, [the `config/permission.php` config file](https://github.com/spatie/laravel-permission/blob/master/config/permission.php) initially contains:
+When published, [the `config/permission.php` config file](https://github.com/offspring/laravel-permission/blob/master/config/permission.php) initially contains:
 
 ```php
 return [
@@ -54,10 +54,10 @@ return [
          * is often just the "Permission" model but you may use whatever you like.
          *
          * The model you want to use as a Permission model needs to implement the
-         * `Spatie\Permission\Contracts\Permission` contract.
+         * `Offspring\Permission\Contracts\Permission` contract.
          */
 
-        'permission' => Spatie\Permission\Models\Permission::class,
+        'permission' => Offspring\Permission\Models\Permission::class,
 
         /*
          * When using the "HasRoles" trait from this package, we need to know which
@@ -65,10 +65,10 @@ return [
          * is often just the "Role" model but you may use whatever you like.
          *
          * The model you want to use as a Role model needs to implement the
-         * `Spatie\Permission\Contracts\Role` contract.
+         * `Offspring\Permission\Contracts\Role` contract.
          */
 
-        'role' => Spatie\Permission\Models\Role::class,
+        'role' => Offspring\Permission\Models\Role::class,
 
     ],
 
@@ -148,7 +148,7 @@ return [
          * The cache key used to store all permissions.
          */
 
-        'key' => 'spatie.permission.cache',
+        'key' => 'offspring.permission.cache',
 
         /*
          * When checking for a permission against a model by passing a Permission

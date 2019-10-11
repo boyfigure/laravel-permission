@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\Permission\Test;
+namespace Offspring\Permission\Test;
 
 use Illuminate\Contracts\Auth\Access\Gate;
 

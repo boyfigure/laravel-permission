@@ -5,16 +5,16 @@
 
 <table>
    <tr>
-      <td><img src="http://spatie.github.io/laravel-permission/sponsor-logo.png"></td>
+      <td><img src="http://offspring.github.io/laravel-permission/sponsor-logo.png"></td>
       <td>If you want to quickly add authentication and authorization to Laravel projects, feel free to check Auth0's Laravel SDK and free plan at <a href="https://auth0.com/overview?utm_source=GHsponsor&utm_medium=GHsponsor&utm_campaign=laravel-permission&utm_content=auth">https://auth0.com/overview</a>.</td>
    </tr>
 </table>
 
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-permission)
-[![Build Status](https://img.shields.io/travis/spatie/laravel-permission/master.svg?style=flat-square)](https://travis-ci.org/spatie/laravel-permission)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/offspring/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/offspring/laravel-permission)
+[![Build Status](https://img.shields.io/travis/offspring/laravel-permission/master.svg?style=flat-square)](https://travis-ci.org/offspring/laravel-permission)
 [![StyleCI](https://styleci.io/repos/42480275/shield)](https://styleci.io/repos/42480275)
-[![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-permission)
+[![Total Downloads](https://img.shields.io/packagist/dt/offspring/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/offspring/laravel-permission)
 
 This package allows you to manage user permissions and roles in a database.
 
@@ -38,7 +38,7 @@ $user->can('edit articles');
 
 ## Documentation, Installation, and Usage Instructions
 
-See the [documentation site](https://docs.spatie.be/laravel-permission/v3/introduction/) for detailed installation and usage instructions.
+See the [documentation site](https://docs.offspring.be/laravel-permission/v3/introduction/) for detailed installation and usage instructions.
 
 ## Need a UI?
 
@@ -48,7 +48,7 @@ The package doesn't come with any screens out of the box, you should build that 
 
 - [Laravel Nova package by @paras-malhotra for managing Roles and Permissions and permissions based authorization for Nova Resources](https://github.com/insenseanalytics/laravel-nova-permission)
 
-- [Extensive tutorial for building permissions UI](https://scotch.io/tutorials/user-authorization-in-laravel-54-with-spatie-laravel-permission) by [Caleb Oki](http://www.caleboki.com/).
+- [Extensive tutorial for building permissions UI](https://scotch.io/tutorials/user-authorization-in-laravel-54-with-offspring-laravel-permission) by [Caleb Oki](http://www.caleboki.com/).
 
 - [How to create a UI for managing the permissions and roles](http://www.qcode.in/easy-roles-and-permissions-in-laravel-5-4/)
 
@@ -71,15 +71,15 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### Security
 
-If you discover any security-related issues, please email [freek@spatie.be](mailto:freek@spatie.be) instead of using the issue tracker.
+If you discover any security-related issues, please email [freek@offspring.be](mailto:freek@offspring.be) instead of using the issue tracker.
 
 ## Postcardware
 
 You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
 
-Our address is: Spatie, Samberstraat 69D, 2060 Antwerp, Belgium.
+Our address is: Offspring, Samberstraat 69D, 2060 Antwerp, Belgium.
 
-We publish all received postcards [on our company website](https://spatie.be/en/opensource/postcards).
+We publish all received postcards [on our company website](https://offspring.be/en/opensource/postcards).
 
 ## Credits
 
@@ -101,9 +101,9 @@ Special thanks to [Alex Vanderbist](https://github.com/AlexVanderbist) who great
 
 ## Support us
 
-Spatie is a web design agency based in Antwerp, Belgium. You'll find an overview of all our open source projects [on our website](https://spatie.be/opensource).
+Offspring is a web design agency based in Antwerp, Belgium. You'll find an overview of all our open source projects [on our website](https://offspring.be/opensource).
 
-Does your business depend on our contributions? Reach out and support us on [Patreon](https://www.patreon.com/spatie). 
+Does your business depend on our contributions? Reach out and support us on [Patreon](https://www.patreon.com/offspring). 
 All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
 
 ## License

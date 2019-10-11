@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\Permission;
+namespace Offspring\Permission;
 
 use Illuminate\Support\Collection;
 

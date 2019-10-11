@@ -13,13 +13,13 @@ Note the following requirements when extending/replacing the models:
 ### Extending
 If you need to EXTEND the existing `Role` or `Permission` models note that:
 
-- Your `Role` model needs to extend the `Spatie\Permission\Models\Role` model
-- Your `Permission` model needs to extend the `Spatie\Permission\Models\Permission` model
+- Your `Role` model needs to extend the `Offspring\Permission\Models\Role` model
+- Your `Permission` model needs to extend the `Offspring\Permission\Models\Permission` model
 
 ### Replacing
 If you need to REPLACE the existing `Role` or `Permission` models you need to keep the
 following things in mind:
 
-- Your `Role` model needs to implement the `Spatie\Permission\Contracts\Role` contract
-- Your `Permission` model needs to implement the `Spatie\Permission\Contracts\Permission` contract
+- Your `Role` model needs to implement the `Offspring\Permission\Contracts\Role` contract
+- Your `Permission` model needs to implement the `Offspring\Permission\Contracts\Permission` contract
 

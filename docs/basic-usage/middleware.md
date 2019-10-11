@@ -8,9 +8,9 @@ This package comes with `RoleMiddleware`, `PermissionMiddleware` and `RoleOrPerm
 ```php
 protected $routeMiddleware = [
     // ...
-    'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
-    'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
-    'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+    'role' => \Offspring\Permission\Middlewares\RoleMiddleware::class,
+    'permission' => \Offspring\Permission\Middlewares\PermissionMiddleware::class,
+    'role_or_permission' => \Offspring\Permission\Middlewares\RoleOrPermissionMiddleware::class,
 ];
 ```
 
@@ -76,7 +76,7 @@ If you want to override the default `403` response, you can catch the `Unauthori
 ```php
 public function render($request, Exception $exception)
 {
-    if ($exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+    if ($exception instanceof \Offspring\Permission\Exceptions\UnauthorizedException) {
         // Code here ...
     }
 

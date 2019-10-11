@@ -1,10 +1,10 @@
 <?php
 
-namespace Spatie\Permission\Test;
+namespace Offspring\Permission\Test;
 
-use Spatie\Permission\Models\Role;
+use Offspring\Permission\Models\Role;
 use Illuminate\Support\Facades\Artisan;
-use Spatie\Permission\Models\Permission;
+use Offspring\Permission\Models\Permission;
 
 class CommandTest extends TestCase
 {
