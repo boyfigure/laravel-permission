@@ -2,12 +2,6 @@
 
 All notable changes to `laravel-permission` will be documented in this file
 
-## 3.0.0 - 2019-09-02
-- Update dependencies to allow for Laravel 6.0
-- Drop support for Laravel 5.7 and older, and PHP 7.1 and older. (They can use v2 of this package until they upgrade.)
-To be clear: v3 requires minimum Laravel 5.8 and PHP 7.2 
-
-
 ## 2.38.0 - 2019-09-02
 - Allow support for multiple role/permission models
 - Load roles relationship only when missing

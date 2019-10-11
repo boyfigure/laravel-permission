@@ -3,9 +3,7 @@ title: Installation in Lumen
 weight: 4
 ---
 
-NOTE: Lumen is not officially supported by this package. However, the following are some steps which may help get you started.
-
-First, install the package via Composer:
+You can install the package via Composer:
 
 ``` bash
 composer require offspring/laravel-permission
@@ -35,7 +33,7 @@ $app->routeMiddleware([
 ]);
 ```
 
-Also register the config file, service provider, and cache alias:
+As well as the config file, service provider, and cache alias:
 
 ```php
 $app->configure('permission');

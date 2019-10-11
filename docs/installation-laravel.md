@@ -3,7 +3,7 @@ title: Installation in Laravel
 weight: 4
 ---
 
-This package can be used in Laravel 5.8 or higher.
+This package can be used in Laravel 5.4 or higher. If you are using an older version of Laravel, take a look at [the v1 branch of this package](https://github.com/offspring/laravel-permission/tree/v1).
 
 You can install the package via composer:
 
@@ -20,7 +20,7 @@ The service provider will automatically get registered. Or you may manually add 
 ];
 ```
 
-You must publish [the migration](https://github.com/offspring/laravel-permission/blob/master/database/migrations/create_permission_tables.php.stub) with:
+You can publish [the migration](https://github.com/offspring/laravel-permission/blob/master/database/migrations/create_permission_tables.php.stub) with:
 
 ```bash
 php artisan vendor:publish --provider="Offspring\Permission\PermissionServiceProvider" --tag="migrations"
@@ -41,7 +41,7 @@ You can publish the config file with:
 php artisan vendor:publish --provider="Offspring\Permission\PermissionServiceProvider" --tag="config"
 ```
 
-When published, [the `config/permission.php` config file](https://github.com/offspring/laravel-permission/blob/master/config/permission.php) initially contains:
+When published, [the `config/permission.php` config file](https://github.com/offspring/laravel-permission/blob/master/config/permission.php) contains:
 
 ```php
 return [
