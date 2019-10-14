@@ -82,6 +82,7 @@ return [
          */
 
         'model_morph_key' => 'model_id',
+        'model_second_morph_key' => 'model_second_id'
     ],
 
     /*
