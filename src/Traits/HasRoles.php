@@ -130,8 +130,6 @@ trait HasRoles
         $model = $this->getModel();
         $model_type = $this->roles()->getMorphClass();
         if ($model->exists) {
-
-
             $user_role = $modelHasRoleClass->saveModelHasRole($this->id, $model_type, $roles, $studio_id);
             $model->load('roles');
         } else {
@@ -157,12 +155,19 @@ trait HasRoles
     /**
      * Revoke the given role from the model.
      *
+     * @param int|null $studio_id
      * @param string|\Offspring\Permission\Contracts\Role $role
+     *
+     * @return $this
      */
-    public function removeRole($role)
+    public function removeRole($studio_id, $role)
     {
-        $this->roles()->detach($this->getStoredRole($role));
+        $modelHasRoleClass = $this->getModelHasRoleClass();
+        $model_type = $this->roles()->getMorphClass();
+        $role_id = $this->getStoredRole($role);
 
+        $role_id = isset($role_id->id) ? $role_id->id : $role_id;
+        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $role_id, $studio_id);
         $this->load('roles');
 
         $this->forgetCachedPermissions();
@@ -177,15 +182,42 @@ trait HasRoles
      *
      * @return $this
      */
-    public function syncRoles(...$roles)
+    public function syncRoles($studio_id, ...$roles)
     {
-        $this->roles()->detach();
+        $roles = collect($roles)
+            ->flatten()
+            ->map(function ($role) {
+                if (empty($role)) {
+                    return false;
+                }
 
-        return $this->assignRole($roles);
+                return $this->getStoredRole($role);
+            })
+            ->filter(function ($role) {
+                return $role instanceof Role;
+            })
+            ->each(function ($role) {
+                $this->ensureModelSharesGuard($role);
+            })
+            ->map->id
+            ->all();
+
+        $current_roles = $this->roles->pluck('id')->toArray();
+        $role_remove = array_unique(array_diff($current_roles, $roles));
+        $role_update = array_unique(array_diff($roles, $current_roles));
+        if (!empty($role_remove)) {
+            foreach ($role_remove as $k => $v) {
+                $this->removeRole($studio_id, $v);
+            }
+        }
+        if (!empty($role_update)) {
+            $this->assignRole($studio_id, $role_update);
+        }
+        return $this;
     }
 
 
-    public function hasRole($roles, string $guard = null, int $studio_id = null): bool
+    public function hasRole($roles, string $guard = null, $studio_id = null): bool
     {
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
@@ -234,12 +266,13 @@ trait HasRoles
      * Determine if the model has any of the given role(s).
      *
      * @param string|array|\Offspring\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+     * @param int|null $studio_id
      *
      * @return bool
      */
-    public function hasAnyRole($roles): bool
+    public function hasAnyRole($roles, $studio_id = null): bool
     {
-        return $this->hasRole($roles);
+        return $this->hasRole($roles, $studio_id);
     }
 
     /**
@@ -309,10 +342,6 @@ trait HasRoles
 
         if (is_string($role)) {
             return $roleClass->findByName($role, $this->getDefaultGuardName());
-        }
-
-        if (isset($studio_id)) {
-            return $role->where('studio_id', $studio_id);
         }
 
         return $role;

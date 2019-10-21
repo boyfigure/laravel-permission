@@ -10,12 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class ModelHasPermissions extends Model implements ModelHasPermissionsContract
 {
     protected $guarded = ['id'];
+    public $timestamps = false;
 
-    public function __construct(array $attributes = [])
+    public function __construct()
     {
-        $attributes['guard_name'] = $attributes['guard_name'] ?? config('auth.defaults.guard');
-
-        parent::__construct($attributes);
 
         $this->setTable(config('permission.table_names.model_has_permissions'));
     }
