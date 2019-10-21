@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Offspring\Permission\Contracts\Role;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Offspring\Permission\Contracts\Permission;
+use Offspring\Permission\Contracts\ModelHasRole;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Offspring\Permission\Exceptions\PermissionDoesNotExist;
 
@@ -30,6 +31,12 @@ class PermissionRegistrar
     /** @var \Illuminate\Support\Collection */
     protected $permissions;
 
+    /** @var string */
+    protected $modelHasRoleClass;
+
+    /** @var string */
+    protected $modelHasPremissionClass;
+
     /** @var DateInterval|int */
     public static $cacheExpirationTime;
 
@@ -50,6 +57,8 @@ class PermissionRegistrar
         $this->gate = $gate;
         $this->permissionClass = config('permission.models.permission');
         $this->roleClass = config('permission.models.role');
+        $this->modelHasRoleClass = config('permission.models.model_has_roles');
+        $this->modelHasPremissionClass = config('permission.models.model_has_permissions');
 
         $this->cacheManager = $cacheManager;
         $this->initializeCache();
@@ -83,7 +92,7 @@ class PermissionRegistrar
         }
 
         // if an undefined cache store is specified, fallback to 'array' which is Laravel's closest equiv to 'none'
-        if (! \array_key_exists($cacheDriver, config('cache.stores'))) {
+        if (!\array_key_exists($cacheDriver, config('cache.stores'))) {
             $cacheDriver = 'array';
         }
 
@@ -170,6 +179,17 @@ class PermissionRegistrar
     public function getRoleClass(): Role
     {
         return app($this->roleClass);
+    }
+
+    /**
+     * Get an instance of the role class.
+     *
+     * @return \Offspring\Permission\Contracts\ModelHasRole
+     */
+
+    public function getModelHasRoleClass(): ModelHasRole
+    {
+        return app($this->modelHasRoleClass);
     }
 
     /**

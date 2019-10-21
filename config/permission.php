@@ -26,6 +26,10 @@ return [
 
         'role' => Offspring\Permission\Models\Role::class,
 
+        'model_has_permissions' => Offspring\Permission\Models\ModelHasPermissions::class,
+
+        'model_has_roles' => Offspring\Permission\Models\ModelHasRole::class,
+
     ],
 
     'table_names' => [

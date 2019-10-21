@@ -13,11 +13,13 @@ trait HasRoles
     use HasPermissions;
 
     private $roleClass;
+    private $modelHasRoleClass;
+
 
     public static function bootHasRoles()
     {
         static::deleting(function ($model) {
-            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+            if (method_exists($model, 'isForceDeleting') && !$model->isForceDeleting()) {
                 return;
             }
 
@@ -27,11 +29,20 @@ trait HasRoles
 
     public function getRoleClass()
     {
-        if (! isset($this->roleClass)) {
+        if (!isset($this->roleClass)) {
             $this->roleClass = app(PermissionRegistrar::class)->getRoleClass();
         }
 
         return $this->roleClass;
+    }
+
+    public function getModelHasRoleClass()
+    {
+        if (!isset($this->modelHasRoleClass)) {
+            $this->modelHasRoleClass = app(PermissionRegistrar::class)->getModelHasRoleClass();
+        }
+
+        return $this->modelHasRoleClass;
     }
 
     /**
@@ -63,7 +74,7 @@ trait HasRoles
             $roles = $roles->all();
         }
 
-        if (! is_array($roles)) {
+        if (!is_array($roles)) {
             $roles = [$roles];
         }
 
@@ -81,7 +92,7 @@ trait HasRoles
         return $query->whereHas('roles', function ($query) use ($roles) {
             $query->where(function ($query) use ($roles) {
                 foreach ($roles as $role) {
-                    $query->orWhere(config('permission.table_names.roles').'.id', $role->id);
+                    $query->orWhere(config('permission.table_names.roles') . '.id', $role->id);
                 }
             });
         });
@@ -94,8 +105,10 @@ trait HasRoles
      *
      * @return $this
      */
-    public function assignRole(...$roles)
+    public function assignRole($studio_id, ...$roles)
     {
+        $modelHasRoleClass = $this->getModelHasRoleClass();
+
         $roles = collect($roles)
             ->flatten()
             ->map(function ($role) {
@@ -115,20 +128,22 @@ trait HasRoles
             ->all();
 
         $model = $this->getModel();
-
+        $model_type = $this->roles()->getMorphClass();
         if ($model->exists) {
-            $this->roles()->sync($roles, false);
+
+
+            $user_role = $modelHasRoleClass->saveModelHasRole($this->id, $model_type, $roles, $studio_id);
             $model->load('roles');
         } else {
             $class = \get_class($model);
 
             $class::saved(
-                function ($object) use ($roles, $model) {
+                function ($object) use ($roles, $model, $modelHasRoleClass, $model_type, $studio_id) {
                     static $modelLastFiredOn;
                     if ($modelLastFiredOn !== null && $modelLastFiredOn === $model) {
                         return;
                     }
-                    $object->roles()->sync($roles, false);
+                    $user_role = $modelHasRoleClass->saveModelHasRole($object->id, $model_type, $roles, $studio_id);
                     $object->load('roles');
                     $modelLastFiredOn = $object;
                 });
@@ -158,7 +173,7 @@ trait HasRoles
     /**
      * Remove all current roles and set the given ones.
      *
-     * @param  array|\Offspring\Permission\Contracts\Role|string  ...$roles
+     * @param array|\Offspring\Permission\Contracts\Role|string ...$roles
      *
      * @return $this
      */
@@ -169,46 +184,50 @@ trait HasRoles
         return $this->assignRole($roles);
     }
 
-    /**
-     * Determine if the model has (one of) the given role(s).
-     *
-     * @param string|int|array|\Offspring\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
-     * @param string|null $guard
-     * @return bool
-     */
-    public function hasRole($roles, string $guard = null): bool
+
+    public function hasRole($roles, string $guard = null, int $studio_id = null): bool
     {
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
 
-        if (is_string($roles)) {
-            return $guard
-                ? $this->roles->where('guard_name', $guard)->contains('name', $roles)
-                : $this->roles->contains('name', $roles);
-        }
-
-        if (is_int($roles)) {
-            return $guard
-                ? $this->roles->where('guard_name', $guard)->contains('id', $roles)
-                : $this->roles->contains('id', $roles);
-        }
-
-        if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
-        }
-
         if (is_array($roles)) {
             foreach ($roles as $role) {
-                if ($this->hasRole($role, $guard)) {
+                //need optimal call database
+                if ($this->hasRole($role, $guard, $studio_id)) {
                     return true;
                 }
             }
 
             return false;
         }
+        if (isset($studio_id)) {
+            $data = $this->roles()->where(function (Builder $query) use ($studio_id) {
+                return $query
+                    ->where('studio_id', $studio_id);
+            })->get();
 
-        return $roles->intersect($guard ? $this->roles->where('guard_name', $guard) : $this->roles)->isNotEmpty();
+        } else {
+            $data = $this->roles;
+        }
+
+        if (is_string($roles)) {
+            return $guard
+                ? $data->where('guard_name', $guard)->contains('name', $roles)
+                : $data->contains('name', $roles);
+        }
+
+        if (is_int($roles)) {
+            return $guard
+                ? $data->where('guard_name', $guard)->contains('id', $roles)
+                : $data->contains('id', $roles);
+        }
+
+        if ($roles instanceof Role) {
+            return $data->contains('id', $roles->id);
+        }
+
+        return $roles->intersect($guard ? $data->where('guard_name', $guard) : $data)->isNotEmpty();
     }
 
     /**
@@ -226,24 +245,35 @@ trait HasRoles
     /**
      * Determine if the model has all of the given role(s).
      *
-     * @param  string|\Offspring\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
-     * @param  string|null  $guard
+     * @param string|\Offspring\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+     * @param string|null $guard
+     * @param int|null $studio_id
      * @return bool
      */
-    public function hasAllRoles($roles, string $guard = null): bool
+    public function hasAllRoles($roles, string $guard = null, int $studio_id = null): bool
     {
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
+        if (isset($studio_id)) {
+            $data = $this->roles()->where(function (Builder $query) use ($studio_id) {
+                return $query
+                    ->where('studio_id', $studio_id);
+            })->get();
+
+        } else {
+            $data = $this->roles;
+        }
+
 
         if (is_string($roles)) {
             return $guard
-                ? $this->roles->where('guard_name', $guard)->contains('name', $roles)
-                : $this->roles->contains('name', $roles);
+                ? $data->where('guard_name', $guard)->contains('name', $roles)
+                : $data->contains('name', $roles);
         }
 
         if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
+            return $data->contains('id', $roles->id);
         }
 
         $roles = collect()->make($roles)->map(function ($role) {
@@ -251,9 +281,9 @@ trait HasRoles
         });
 
         return $roles->intersect(
-            $guard
-                ? $this->roles->where('guard_name', $guard)->pluck('name')
-                : $this->getRoleNames()) == $roles;
+                $guard
+                    ? $data->where('guard_name', $guard)->pluck('name')
+                    : $this->getRoleNames()) == $roles;
     }
 
     /**
@@ -281,6 +311,10 @@ trait HasRoles
             return $roleClass->findByName($role, $this->getDefaultGuardName());
         }
 
+        if (isset($studio_id)) {
+            return $role->where('studio_id', $studio_id);
+        }
+
         return $role;
     }
 
@@ -299,7 +333,7 @@ trait HasRoles
             return explode('|', $pipeString);
         }
 
-        if (! in_array($quoteCharacter, ["'", '"'])) {
+        if (!in_array($quoteCharacter, ["'", '"'])) {
             return explode('|', $pipeString);
         }
 
