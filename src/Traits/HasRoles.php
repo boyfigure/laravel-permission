@@ -272,7 +272,7 @@ trait HasRoles
      */
     public function hasAnyRole($roles, $studio_id = null): bool
     {
-        return $this->hasRole($roles, $studio_id);
+        return $this->hasRole($roles, null, $studio_id);
     }
 
     /**
