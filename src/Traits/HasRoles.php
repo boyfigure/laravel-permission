@@ -275,6 +275,18 @@ trait HasRoles
         return $this->hasRole($roles, null, $studio_id);
     }
 
+    public function hasAnyRolesAllStudio($roles, $studios): bool
+    {
+        $check = true;
+
+        foreach ($studios as $k => $studio_id) {
+            if (!$this->hasRole($roles, null, $studio_id)) {
+                $check = false;
+            }
+        }
+        return $check;
+    }
+
     /**
      * Determine if the model has all of the given role(s).
      *
