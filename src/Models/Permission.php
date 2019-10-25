@@ -146,4 +146,11 @@ class Permission extends Model implements PermissionContract
             ->setPermissionClass(static::class)
             ->getPermissions($params);
     }
+
+    public static function getTableName()
+    {
+        $instance = new static;
+
+        return $instance->getTable();
+    }
 }

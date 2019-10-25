@@ -17,4 +17,11 @@ class ModelHasPermissions extends Model implements ModelHasPermissionsContract
 
         $this->setTable(config('permission.table_names.model_has_permissions'));
     }
+    public static function getTableName()
+    {
+        $instance = new static;
+
+        return $instance->getTable();
+    }
+
 }

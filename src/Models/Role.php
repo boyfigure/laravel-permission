@@ -155,4 +155,11 @@ class Role extends Model implements RoleContract
 
         return $this->permissions->contains('id', $permission->id);
     }
+
+    public static function getTableName()
+    {
+        $instance = new static;
+
+        return $instance->getTable();
+    }
 }

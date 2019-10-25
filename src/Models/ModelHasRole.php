@@ -66,4 +66,11 @@ class ModelHasRole extends Model implements ModelHasRoleContract
             return false;
         }
     }
+
+    public static function getTableName()
+    {
+        $instance = new static;
+
+        return $instance->getTable();
+    }
 }
