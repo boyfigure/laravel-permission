@@ -101,6 +101,7 @@ trait HasRoles
     /**
      * Assign the given role to the model.
      *
+     * @param int|null $studio_id
      * @param array|string|\Offspring\Permission\Contracts\Role ...$roles
      *
      * @return $this
@@ -156,18 +157,50 @@ trait HasRoles
      * Revoke the given role from the model.
      *
      * @param int|null $studio_id
-     * @param string|\Offspring\Permission\Contracts\Role $role
+     * @param array|\Offspring\Permission\Contracts\Role ...$roles
+     *
      *
      * @return $this
      */
-    public function removeRole($studio_id, $role)
+//    public function removeRole($studio_id, $role)
+//    {
+//        $modelHasRoleClass = $this->getModelHasRoleClass();
+//        $model_type = $this->roles()->getMorphClass();
+//        $role_id = $this->getStoredRole($role);
+//
+//        $role_id = isset($role_id->id) ? $role_id->id : $role_id;
+//        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $role_id, $studio_id);
+//        $this->load('roles');
+//
+//        $this->forgetCachedPermissions();
+//
+//        return $this;
+//    }
+
+    public function removeRole($studio_id, ...$roles)
     {
         $modelHasRoleClass = $this->getModelHasRoleClass();
-        $model_type = $this->roles()->getMorphClass();
-        $role_id = $this->getStoredRole($role);
 
-        $role_id = isset($role_id->id) ? $role_id->id : $role_id;
-        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $role_id, $studio_id);
+        $roles = collect($roles)
+            ->flatten()
+            ->map(function ($role) {
+                if (empty($role)) {
+                    return false;
+                }
+
+                return $this->getStoredRole($role);
+            })
+            ->filter(function ($role) {
+                return $role instanceof Role;
+            })
+            ->each(function ($role) {
+                $this->ensureModelSharesGuard($role);
+            })
+            ->map->id
+            ->all();
+
+        $model_type = $this->roles()->getMorphClass();
+        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $roles, $studio_id);
         $this->load('roles');
 
         $this->forgetCachedPermissions();

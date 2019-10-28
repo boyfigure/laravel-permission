@@ -49,18 +49,20 @@ class ModelHasRole extends Model implements ModelHasRoleContract
         }
     }
 
-    public function removeModelHasRole($model_id, $model_type, $role, $studio_id = null)
+    public function removeModelHasRole($model_id, $model_type, $roles, $studio_id = null)
     {
         try {
-            $query = ModelHasRole::query()
-                ->where(config('permission.column_names.model_morph_key'), $model_id)
-                ->where('model_type', $model_type)
-                ->where('role_id', $role);
+            foreach ($roles as $k => $v) {
+                $query = ModelHasRole::query()
+                    ->where(config('permission.column_names.model_morph_key'), $model_id)
+                    ->where('model_type', $model_type)
+                    ->where('role_id', $v);
 
-            if (isset($studio_id)) {
-                $query->where('studio_id', $studio_id);
+                if (isset($studio_id)) {
+                    $query->where('studio_id', $studio_id);
+                }
+                $query->delete();
             }
-            $query->delete();
             return true;
         } catch (\Exception $e) {
             return false;
