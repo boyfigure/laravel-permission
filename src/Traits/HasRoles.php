@@ -211,6 +211,7 @@ trait HasRoles
     /**
      * Remove all current roles and set the given ones.
      *
+     * @param int|null $studio_id
      * @param array|\Offspring\Permission\Contracts\Role|string ...$roles
      *
      * @return $this
