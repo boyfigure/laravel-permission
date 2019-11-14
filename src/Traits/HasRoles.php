@@ -56,7 +56,7 @@ trait HasRoles
             config('permission.table_names.model_has_roles'),
             config('permission.column_names.model_morph_key'),
             'role_id'
-        );
+        )->withPivot('studio_id');
     }
 
     /**
@@ -211,7 +211,6 @@ trait HasRoles
     /**
      * Remove all current roles and set the given ones.
      *
-     * @param int|null $studio_id
      * @param array|\Offspring\Permission\Contracts\Role|string ...$roles
      *
      * @return $this
@@ -376,6 +375,12 @@ trait HasRoles
     public function getRoleNames(): Collection
     {
         return $this->roles->pluck('name');
+    }
+
+    public function getRoleByStudio(): Collection
+    {
+        $data = $this->roles()->get();
+        return $data;
     }
 
     protected function getStoredRole($role): Role
