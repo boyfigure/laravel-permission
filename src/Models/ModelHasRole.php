@@ -75,4 +75,26 @@ class ModelHasRole extends Model implements ModelHasRoleContract
 
         return $instance->getTable();
     }
+
+    public function getFirstModelHasRoleByRole($model_type, $role, $studio_id = null)
+    {
+        try {
+            $query = ModelHasRole::query()
+                ->where('model_type', $model_type)
+                ->where('role_id', $role);
+
+            if (isset($studio_id)) {
+                $query->where('studio_id', $studio_id);
+            }
+            $user = $query->first();
+            if (isset($user)) {
+                $user = $user->toArray();
+                return $user[config('permission.column_names.model_morph_key')];
+            }
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
 }

@@ -419,4 +419,15 @@ trait HasRoles
 
         return explode('|', trim($pipeString, $quoteCharacter));
     }
+
+    public function getFirstUserByRole($role, $studio_id)
+    {
+        $modelHasRoleClass = $this->getModelHasRoleClass();
+        $model_type = $this->roles()->getMorphClass();
+        $role = $this->getStoredRole($role);
+        if (!$role) {
+            return false;
+        }
+        return $modelHasRoleClass->getFirstModelHasRoleByRole($model_type, $role->id, $studio_id);
+    }
 }
