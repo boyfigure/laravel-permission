@@ -96,6 +96,8 @@ return [
      */
 
     'display_permission_in_exception' => false,
+    'role_super_admin' => 'SUPER_ADMIN',
+
 
     'cache' => [
 

@@ -19,8 +19,12 @@ class ModelHasRole extends Model implements ModelHasRoleContract
 
     public function saveModelHasRole($model_id, $model_type, $roles, $studio_id = null)
     {
+        $role_super_admin = Role::query()->where('name', config('permission.role_super_admin'))->first();
         try {
             foreach ($roles as $k => $v) {
+                if (isset($role_super_admin) and $role_super_admin->getKey() == $v) {
+                    return false;
+                }
                 $query = ModelHasRole::query()
                     ->where(config('permission.column_names.model_morph_key'), $model_id)
                     ->where('model_type', $model_type)

@@ -252,6 +252,9 @@ trait HasRoles
 
     public function hasRole($roles, string $guard = null, $studio_id = null): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
@@ -311,7 +314,9 @@ trait HasRoles
     public function hasAnyRolesAllStudio($roles, $studios): bool
     {
         $check = true;
-
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         foreach ($studios as $k => $studio_id) {
             if (!$this->hasRole($roles, null, $studio_id)) {
                 $check = false;
@@ -330,6 +335,9 @@ trait HasRoles
      */
     public function hasAllRoles($roles, string $guard = null, int $studio_id = null): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
@@ -429,5 +437,18 @@ trait HasRoles
             return false;
         }
         return $modelHasRoleClass->getFirstModelHasRoleByRole($model_type, $role->id, $studio_id);
+    }
+
+    public function isSuperAdmin()
+    {
+        $data = $this->roles()->where(function (Builder $query) {
+            return $query
+                ->where('studio_id', 0)
+                ->where('name', config('permission.role_super_admin'));
+        })->first();
+        if (isset($data)) {
+            return true;
+        }
+        return false;
     }
 }
