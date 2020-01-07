@@ -56,9 +56,10 @@ class CreatePermissionTables extends Migration
             $table->string('model_type');
             $table->unsignedBigInteger($columnNames['model_morph_key']);
             $table->unsignedBigInteger($columnNames['model_second_morph_key']);
-            $table->index([$columnNames['model_morph_key'], 'model_type', $columnNames['model_second_morph_key']], 'model_has_roles_model_id_model_type_index');
+            $table->string('group_type')->nullable();
+            $table->index([$columnNames['model_morph_key'], 'model_type', $columnNames['model_second_morph_key'], 'group_type'], 'model_has_roles_model_id_model_type_index');
 
-            $table->primary(['role_id', $columnNames['model_morph_key'], 'model_type', $columnNames['model_second_morph_key']],
+            $table->primary(['role_id', $columnNames['model_morph_key'], 'model_type', $columnNames['model_second_morph_key'], 'group_type'],
                 'model_has_roles_role_model_type_primary');
         });
 
@@ -67,6 +68,18 @@ class CreatePermissionTables extends Migration
             $table->unsignedBigInteger('role_id');
 
             $table->primary(['permission_id', 'role_id'], 'role_has_permissions_permission_id_role_id_primary');
+        });
+
+        Schema::create($tableNames['studio_groups'], function (Blueprint $table) use ($tableNames) {
+            $table->bigIncrements('id');
+            $table->string('name');
+            $table->softDeletes();
+        });
+        Schema::create($tableNames['studio_group_studios'], function (Blueprint $table) use ($tableNames) {
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('studio_group_id');
+
+            $table->primary(['studio_id', 'studio_group_id']);
         });
 
         app('cache')
@@ -88,5 +101,7 @@ class CreatePermissionTables extends Migration
         Schema::drop($tableNames['model_has_permissions']);
         Schema::drop($tableNames['roles']);
         Schema::drop($tableNames['permissions']);
+        Schema::drop($tableNames['studio_groups']);
+        Schema::drop($tableNames['studio_group_studios']);
     }
 }

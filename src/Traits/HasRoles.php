@@ -5,6 +5,7 @@ namespace Offspring\Permission\Traits;
 use Illuminate\Support\Collection;
 use Offspring\Permission\Contracts\Role;
 use Illuminate\Database\Eloquent\Builder;
+use Offspring\Permission\Models\StudioGroupStudio;
 use Offspring\Permission\PermissionRegistrar;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -270,9 +271,24 @@ trait HasRoles
             return false;
         }
         if (isset($studio_id)) {
-            $data = $this->roles()->where(function (Builder $query) use ($studio_id) {
-                return $query
-                    ->where('studio_id', $studio_id);
+            //check group
+            $group = StudioGroupStudio::query()->where('studio_id', $studio_id)->orWhere('studio_id', 0)->get();
+            $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
+                if (!$group->isEmpty()) {
+                    $group = $group->pluck('studio_group_id')->toArray();
+                    $query->where(function ($q) use ($group) {
+                        $q->where('group_type', 1)
+                            ->whereIn('studio_id', $group);
+                    });
+                    $query->orWhere(function ($q) use ($studio_id) {
+                        $q->where('group_type', 0)
+                            ->where('studio_id', $studio_id);
+                    });
+                } else {
+                    $query->where('group_type', 0)
+                        ->where('studio_id', $studio_id);
+                }
+                return $query;
             })->get();
 
         } else {

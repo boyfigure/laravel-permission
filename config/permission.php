@@ -29,6 +29,8 @@ return [
         'model_has_permissions' => Offspring\Permission\Models\ModelHasPermissions::class,
 
         'model_has_roles' => Offspring\Permission\Models\ModelHasRole::class,
+        'studio_groups' => Offspring\Permission\Models\StudioGroup::class,
+        'studio_group_studios' => Offspring\Permission\Models\StudioGroupStudio::class,
 
     ],
 
@@ -73,6 +75,11 @@ return [
          */
 
         'role_has_permissions' => 'role_has_permissions',
+
+
+        'studio_groups' => 'studio_groups',
+
+        'studio_group_studios' => 'studio_group_studios'
     ],
 
     'column_names' => [
