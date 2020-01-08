@@ -46,6 +46,15 @@ trait HasRoles
         return $this->modelHasRoleClass;
     }
 
+    protected function getCache()
+    {
+        if (!isset($this->cache_role)) {
+            $this->cache_role = app(PermissionRegistrar::class)->getCacheStore();
+        }
+
+        return $this->cache_role;
+    }
+
     /**
      * A model may have multiple roles.
      */
@@ -103,11 +112,12 @@ trait HasRoles
      * Assign the given role to the model.
      *
      * @param int|null $studio_id
+     * @param int|null $group_type
      * @param array|string|\Offspring\Permission\Contracts\Role ...$roles
      *
      * @return $this
      */
-    public function assignRole($studio_id, ...$roles)
+    public function assignRole($studio_id, $group_type = 0, ...$roles)
     {
         $modelHasRoleClass = $this->getModelHasRoleClass();
 
@@ -132,18 +142,18 @@ trait HasRoles
         $model = $this->getModel();
         $model_type = $this->roles()->getMorphClass();
         if ($model->exists) {
-            $user_role = $modelHasRoleClass->saveModelHasRole($this->id, $model_type, $roles, $studio_id);
+            $user_role = $modelHasRoleClass->saveModelHasRole($this->id, $model_type, $roles, $studio_id, $group_type);
             $model->load('roles');
         } else {
             $class = \get_class($model);
 
             $class::saved(
-                function ($object) use ($roles, $model, $modelHasRoleClass, $model_type, $studio_id) {
+                function ($object) use ($roles, $model, $modelHasRoleClass, $model_type, $studio_id, $group_type) {
                     static $modelLastFiredOn;
                     if ($modelLastFiredOn !== null && $modelLastFiredOn === $model) {
                         return;
                     }
-                    $user_role = $modelHasRoleClass->saveModelHasRole($object->id, $model_type, $roles, $studio_id);
+                    $user_role = $modelHasRoleClass->saveModelHasRole($object->id, $model_type, $roles, $studio_id, $group_type);
                     $object->load('roles');
                     $modelLastFiredOn = $object;
                 });
@@ -158,27 +168,14 @@ trait HasRoles
      * Revoke the given role from the model.
      *
      * @param int|null $studio_id
+     * @param int|null $group_type
      * @param array|\Offspring\Permission\Contracts\Role ...$roles
      *
      *
      * @return $this
      */
-//    public function removeRole($studio_id, $role)
-//    {
-//        $modelHasRoleClass = $this->getModelHasRoleClass();
-//        $model_type = $this->roles()->getMorphClass();
-//        $role_id = $this->getStoredRole($role);
-//
-//        $role_id = isset($role_id->id) ? $role_id->id : $role_id;
-//        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $role_id, $studio_id);
-//        $this->load('roles');
-//
-//        $this->forgetCachedPermissions();
-//
-//        return $this;
-//    }
 
-    public function removeRole($studio_id, ...$roles)
+    public function removeRole($studio_id, $group_type = 0, ...$roles)
     {
         $modelHasRoleClass = $this->getModelHasRoleClass();
 
@@ -201,7 +198,7 @@ trait HasRoles
             ->all();
 
         $model_type = $this->roles()->getMorphClass();
-        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $roles, $studio_id);
+        $user_role = $modelHasRoleClass->removeModelHasRole($this->id, $model_type, $roles, $studio_id, $group_type);
         $this->load('roles');
 
         $this->forgetCachedPermissions();
@@ -211,12 +208,13 @@ trait HasRoles
 
     /**
      * Remove all current roles and set the given ones.
-     *
+     * @param int|null $studio_id
+     * @param int|null $group_type
      * @param array|\Offspring\Permission\Contracts\Role|string ...$roles
      *
      * @return $this
      */
-    public function syncRoles($studio_id, ...$roles)
+    public function syncRoles($studio_id, $group_type = 0, ...$roles)
     {
         $roles = collect($roles)
             ->flatten()
@@ -241,11 +239,11 @@ trait HasRoles
         $role_update = array_unique(array_diff($roles, $current_roles));
         if (!empty($role_remove)) {
             foreach ($role_remove as $k => $v) {
-                $this->removeRole($studio_id, $v);
+                $this->removeRole($studio_id, $group_type, $v);
             }
         }
         if (!empty($role_update)) {
-            $this->assignRole($studio_id, $role_update);
+            $this->assignRole($studio_id, $group_type, $role_update);
         }
         return $this;
     }
@@ -253,9 +251,12 @@ trait HasRoles
 
     public function hasRole($roles, string $guard = null, $studio_id = null): bool
     {
+
         if ($this->isSuperAdmin()) {
             return true;
         }
+
+        $cache = $this->getCache();
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
@@ -272,25 +273,30 @@ trait HasRoles
         }
         if (isset($studio_id)) {
             //check group
-            $group = StudioGroupStudio::query()->where('studio_id', $studio_id)->orWhere('studio_id', 0)->get();
-            $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
-                if (!$group->isEmpty()) {
-                    $group = $group->pluck('studio_group_id')->toArray();
-                    $query->where(function ($q) use ($group) {
-                        $q->where('group_type', 1)
-                            ->whereIn('studio_id', $group);
-                    });
-                    $query->orWhere(function ($q) use ($studio_id) {
-                        $q->where('group_type', 0)
+            $modelHasRoleClass = $this->getModelHasRoleClass();
+            $group = $modelHasRoleClass->getGroupByStudio($studio_id);
+            //get user role
+            $cache_tag = config('permission.cache.user_role_key');
+            $cache_key = $cache_tag . '.' . $this->id;
+            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
+                return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
+                    if (!$group->isEmpty()) {
+                        $group = $group->pluck('studio_group_id')->toArray();
+                        $query->where(function ($q) use ($group) {
+                            $q->where('group_type', 1)
+                                ->whereIn('studio_id', $group);
+                        });
+                        $query->orWhere(function ($q) use ($studio_id) {
+                            $q->where('group_type', 0)
+                                ->where('studio_id', $studio_id);
+                        });
+                    } else {
+                        $query->where('group_type', 0)
                             ->where('studio_id', $studio_id);
-                    });
-                } else {
-                    $query->where('group_type', 0)
-                        ->where('studio_id', $studio_id);
-                }
-                return $query;
-            })->get();
-
+                    }
+                    return $query;
+                })->get();
+            });
         } else {
             $data = $this->roles;
         }
@@ -457,11 +463,17 @@ trait HasRoles
 
     public function isSuperAdmin()
     {
-        $data = $this->roles()->where(function (Builder $query) {
-            return $query
-                ->where('studio_id', 0)
-                ->where('name', config('permission.role_super_admin'));
-        })->first();
+        $cache = $this->getCache();
+        $cache_tag = md5(config('permission.cache.super_admin'));
+        $cache_key = $cache_tag . '.' . $this->id;
+
+        $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () {
+            return $this->roles()->where(function (Builder $query) {
+                return $query
+                    ->where('studio_id', 0)
+                    ->where('name', config('permission.role_super_admin'));
+            })->first();
+        });
         if (isset($data)) {
             return true;
         }

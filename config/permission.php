@@ -93,7 +93,7 @@ return [
          */
 
         'model_morph_key' => 'model_id',
-        'model_second_morph_key' => 'model_second_id'
+        'model_second_morph_key' => 'model_second_id',
     ],
 
     /*
@@ -120,7 +120,9 @@ return [
          */
 
         'key' => 'offspring.permission.cache',
-
+        'group_studio_key' => 'offspring.role.cache.group_studio',
+        'user_role_key' => 'offspring.role.cache.user_role',
+        'super_admin' => 'offspring.role.cache.super_admin',
         /*
          * When checking for a permission against a model by passing a Permission
          * instance to the check, this key determines what attribute on the
