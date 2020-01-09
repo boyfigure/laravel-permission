@@ -14,7 +14,6 @@ class StudioGroupStudio extends Model implements StudioGroupStudioContract
 
     public function __construct()
     {
-
         $this->setTable(config('permission.table_names.studio_group_studios'));
     }
 
@@ -25,4 +24,22 @@ class StudioGroupStudio extends Model implements StudioGroupStudioContract
         return $instance->getTable();
     }
 
+    public function getStudioInGroup($studio_ids,$group_ids)
+    {
+        try {
+
+            $query = StudioGroupStudio::query()
+                ->whereIn('studio_group_id', $group_ids);
+            if (is_array($studio_ids)) {
+                $query->whereIn('studio_id', $studio_ids);
+            } else {
+                $query->where('studio_id', $studio_ids);
+            }
+
+            return $query->get();
+
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

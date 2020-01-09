@@ -73,6 +73,8 @@ class CreatePermissionTables extends Migration
         Schema::create($tableNames['studio_groups'], function (Blueprint $table) use ($tableNames) {
             $table->bigIncrements('id');
             $table->string('name');
+            $table->string('code');
+            $table->tinyInteger('is_all_studio')->default(0);
             $table->softDeletes();
         });
         Schema::create($tableNames['studio_group_studios'], function (Blueprint $table) use ($tableNames) {

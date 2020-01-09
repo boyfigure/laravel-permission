@@ -8,6 +8,9 @@ use Offspring\Permission\Contracts\Role;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Offspring\Permission\Contracts\Permission;
 use Offspring\Permission\Contracts\ModelHasRole;
+use Offspring\Permission\Contracts\StudioGroup;
+use Offspring\Permission\Contracts\StudioGroupStudio;
+
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Offspring\Permission\Exceptions\PermissionDoesNotExist;
 
@@ -35,7 +38,14 @@ class PermissionRegistrar
     protected $modelHasRoleClass;
 
     /** @var string */
+    protected $modelStudioGroupStudio;
+
+    /** @var string */
+    protected $modelStudioGroup;
+
+    /** @var string */
     protected $modelHasPremissionClass;
+
 
     /** @var DateInterval|int */
     public static $cacheExpirationTime;
@@ -59,6 +69,8 @@ class PermissionRegistrar
         $this->roleClass = config('permission.models.role');
         $this->modelHasRoleClass = config('permission.models.model_has_roles');
         $this->modelHasPremissionClass = config('permission.models.model_has_permissions');
+        $this->modelStudioGroupStudio = config('permission.models.studio_group_studios');
+        $this->modelStudioGroup = config('permission.models.studio_groups');
 
         $this->cacheManager = $cacheManager;
         $this->initializeCache();
@@ -79,6 +91,7 @@ class PermissionRegistrar
         self::$cacheModelKey = config('permission.cache.model_key');
 
         $this->cache = $this->getCacheStoreFromConfig();
+
     }
 
     protected function getCacheStoreFromConfig(): \Illuminate\Contracts\Cache\Repository
@@ -191,6 +204,29 @@ class PermissionRegistrar
     {
         return app($this->modelHasRoleClass);
     }
+
+    /**
+     * Get an instance of the role class.
+     *
+     * @return \Offspring\Permission\Contracts\StudioGroupStudio
+     */
+
+    public function getModelStudioGroupStudioClass(): StudioGroupStudio
+    {
+        return app($this->modelStudioGroupStudio);
+    }
+
+    /**
+     * Get an instance of the role class.
+     *
+     * @return \Offspring\Permission\Contracts\StudioGroup
+     */
+
+    public function getStudioGroupClass(): StudioGroup
+    {
+        return app($this->modelStudioGroup);
+    }
+
 
     /**
      * Get the instance of the Cache Store.

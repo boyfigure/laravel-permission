@@ -25,4 +25,26 @@ class StudioGroup extends Model implements StudioGroupContract
         return $instance->getTable();
     }
 
+    public function checkGroupHasAllStudio($group_ids)
+    {
+        try {
+            $query = StudioGroup::query()
+                ->whereIn('is_all_studio', 1);
+            if (is_array($group_ids)) {
+                $query->whereIn('id', $group_ids);
+            } else {
+                $query->where('id', $group_ids);
+            }
+
+            return $query->first();
+
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function groupStudios()
+    {
+        return $this->hasMany(config('permission.models.studio_group_studios'), 'studio_group_id');
+    }
 }

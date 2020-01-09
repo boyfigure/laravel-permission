@@ -97,7 +97,7 @@ class ModelHasRole extends Model implements ModelHasRoleContract
 
                 $query->where(function (Builder $query) use ($studio_id, $group) {
                     if (!$group->isEmpty()) {
-                        $group = $group->pluck('studio_group_id')->toArray();
+                        $group = $group->pluck('id')->toArray();
                         $query->where(function ($q) use ($group) {
                             $q->where('group_type', 1)
                                 ->whereIn('studio_id', $group);
@@ -131,7 +131,10 @@ class ModelHasRole extends Model implements ModelHasRoleContract
         $cache_key = $cache_tag . '.' . $studio_id;
 
         $group = $this->getCache()->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id) {
-            return StudioGroupStudio::query()->where('studio_id', $studio_id)->orWhere('studio_id', 0)->get();
+            return StudioGroup::query()->whereHas('groupStudios', function ($q) use ($studio_id) {
+                $q->where('studio_id', $studio_id);
+            })->orWhere('is_all_studio', 1)
+                ->get();
         });
         return $group;
     }

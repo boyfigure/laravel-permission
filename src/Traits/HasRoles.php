@@ -15,7 +15,8 @@ trait HasRoles
 
     private $roleClass;
     private $modelHasRoleClass;
-
+    private $studioGroupStudioClass;
+    private $studioGroupClass;
 
     public static function bootHasRoles()
     {
@@ -46,6 +47,24 @@ trait HasRoles
         return $this->modelHasRoleClass;
     }
 
+    public function getStudioGroupStudioClass()
+    {
+        if (!isset($this->studioGroupStudioClass)) {
+            $this->studioGroupStudioClass = app(PermissionRegistrar::class)->getModelStudioGroupStudioClass();
+        }
+
+        return $this->studioGroupStudioClass;
+    }
+
+    public function getStudioGroupClass()
+    {
+        if (!isset($this->studioGroupClass)) {
+            $this->studioGroupClass = app(PermissionRegistrar::class)->getStudioGroupClass();
+        }
+
+        return $this->studioGroupClass;
+    }
+
     protected function getCache()
     {
         if (!isset($this->cache_role)) {
@@ -66,7 +85,7 @@ trait HasRoles
             config('permission.table_names.model_has_roles'),
             config('permission.column_names.model_morph_key'),
             'role_id'
-        )->withPivot('studio_id');
+        )->withPivot('studio_id', 'group_type');
     }
 
     /**
@@ -281,7 +300,7 @@ trait HasRoles
             $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
                 return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
                     if (!$group->isEmpty()) {
-                        $group = $group->pluck('studio_group_id')->toArray();
+                        $group = $group->pluck('id')->toArray();
                         $query->where(function ($q) use ($group) {
                             $q->where('group_type', 1)
                                 ->whereIn('studio_id', $group);
@@ -478,5 +497,19 @@ trait HasRoles
             return true;
         }
         return false;
+    }
+
+    public function getStudioInGroup($studio_ids,$group_ids)
+    {
+        $studioGroupStudioClass = $this->getStudioGroupStudioClass();
+
+        return $studioGroupStudioClass->getStudioInGroup($studio_ids,$group_ids);
+    }
+
+    public function checkGroupHasAllStudio($group_ids)
+    {
+        $studioGroupStudioClass = $this->getStudioGroupClass();
+
+        return $studioGroupStudioClass->checkGroupHasAllStudio($group_ids);
     }
 }
