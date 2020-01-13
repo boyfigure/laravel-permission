@@ -296,26 +296,44 @@ trait HasRoles
             $group = $modelHasRoleClass->getGroupByStudio($studio_id);
             //get user role
             $cache_tag = config('permission.cache.user_role_key');
-            $cache_key = $cache_tag . '.' . $this->id;
-            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
-                return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
-                    if (!$group->isEmpty()) {
-                        $group = $group->pluck('id')->toArray();
-                        $query->where(function ($q) use ($group) {
-                            $q->where('group_type', 1)
-                                ->whereIn('studio_id', $group);
-                        });
-                        $query->orWhere(function ($q) use ($studio_id) {
-                            $q->where('group_type', 0)
-                                ->where('studio_id', $studio_id);
-                        });
-                    } else {
-                        $query->where('group_type', 0)
+            $cache_key = $cache_tag . '.' . $this->id . '.' . $studio_id;
+
+            $data =  $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
+                if (!$group->isEmpty()) {
+                    $group = $group->pluck('id')->toArray();
+                    $query->where(function ($q) use ($group) {
+                        $q->where('group_type', 1)
+                            ->whereIn('studio_id', $group);
+                    });
+                    $query->orWhere(function ($q) use ($studio_id) {
+                        $q->where('group_type', 0)
                             ->where('studio_id', $studio_id);
-                    }
-                    return $query;
-                })->get();
-            });
+                    });
+                } else {
+                    $query->where('group_type', 0)
+                        ->where('studio_id', $studio_id);
+                }
+                return $query;
+            })->get();
+//            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
+//                return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
+//                    if (!$group->isEmpty()) {
+//                        $group = $group->pluck('id')->toArray();
+//                        $query->where(function ($q) use ($group) {
+//                            $q->where('group_type', 1)
+//                                ->whereIn('studio_id', $group);
+//                        });
+//                        $query->orWhere(function ($q) use ($studio_id) {
+//                            $q->where('group_type', 0)
+//                                ->where('studio_id', $studio_id);
+//                        });
+//                    } else {
+//                        $query->where('group_type', 0)
+//                            ->where('studio_id', $studio_id);
+//                    }
+//                    return $query;
+//                })->get();
+//            });
         } else {
             $data = $this->roles;
         }
