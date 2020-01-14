@@ -7,6 +7,7 @@ use Offspring\Permission\Contracts\ModelHasRole as ModelHasRoleContract;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Offspring\Permission\PermissionRegistrar;
+use Illuminate\Database\Eloquent\Builder;
 
 class ModelHasRole extends Model implements ModelHasRoleContract
 {
