@@ -298,7 +298,7 @@ trait HasRoles
             $cache_tag = config('permission.cache.user_role_key');
             $cache_key = $cache_tag . '.' . $this->id . '.' . $studio_id;
 
-            $data =  $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
+            $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
                 if (!$group->isEmpty()) {
                     $group = $group->pluck('id')->toArray();
                     $query->where(function ($q) use ($group) {
@@ -503,25 +503,31 @@ trait HasRoles
         $cache = $this->getCache();
         $cache_tag = md5(config('permission.cache.super_admin'));
         $cache_key = $cache_tag . '.' . $this->id;
+        $result = $cache->get($cache_key);
+        if (isset($result)) {
+            return $result;
+        }
 
-        $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () {
-            return $this->roles()->where(function (Builder $query) {
-                return $query
-                    ->where('studio_id', 0)
-                    ->where('name', config('permission.role_super_admin'));
-            })->first();
-        });
+        $data = $this->roles()->where(function (Builder $query) {
+            return $query
+                ->where('studio_id', 0)
+                ->where('name', config('permission.role_super_admin'));
+        })->first();
+
+        $cache->forget($cache_key);
         if (isset($data)) {
+            $cache->tags($cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
             return true;
         }
+        $cache->put($cache_key, false, config('permission.cache.expiration_time'));
         return false;
     }
 
-    public function getStudioInGroup($studio_ids,$group_ids)
+    public function getStudioInGroup($studio_ids, $group_ids)
     {
         $studioGroupStudioClass = $this->getStudioGroupStudioClass();
 
-        return $studioGroupStudioClass->getStudioInGroup($studio_ids,$group_ids);
+        return $studioGroupStudioClass->getStudioInGroup($studio_ids, $group_ids);
     }
 
     public function checkGroupHasAllStudio($group_ids)
