@@ -122,7 +122,11 @@ return [
         'key' => 'offspring.permission.cache',
         'group_studio_key' => 'offspring.role.cache.group_studio',
         'user_role_key' => 'offspring.role.cache.user_role',
+        'user_studio_role_key' => 'offspring.role.cache.user_studio_role',
+        'user_group_role_key' => 'offspring.role.cache.user_group_role_key',
         'super_admin' => 'offspring.role.cache.super_admin',
+        'all_tags_cache' => 'offspring.role.cache.all_tags_cache',
+
         /*
          * When checking for a permission against a model by passing a Permission
          * instance to the check, this key determines what attribute on the

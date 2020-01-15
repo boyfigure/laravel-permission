@@ -18,6 +18,10 @@ trait HasRoles
     private $studioGroupStudioClass;
     private $studioGroupClass;
 
+    private $not_group_studio = 0;
+    private $group_studio = 1;
+
+
     public static function bootHasRoles()
     {
         static::deleting(function ($model) {
@@ -315,6 +319,7 @@ trait HasRoles
                 }
                 return $query;
             })->get();
+
 //            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
 //                return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
 //                    if (!$group->isEmpty()) {
@@ -444,11 +449,50 @@ trait HasRoles
         return $this->roles->pluck('name');
     }
 
-    public function getRoleByStudio(): Collection
+    public function getRoleAndStudio()
     {
+        $cache = $this->getCache();
+        $cache_tag = config('permission.cache.user_studio_role_key');
+        $cache_key = $cache_tag . '.' . $this->id;
+        $result = $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->get($cache_key);
+        if (isset($result)) {
+            return $result;
+        }
+
         $data = $this->roles()->get();
-        return $data;
+        $role = [
+            'is_empty' => true,
+            'studios' => [],
+            'groups' => []
+        ];
+
+        if (!$data->isEmpty()) {
+            $role['is_empty'] = false;
+            foreach ($data as $k => $v) {
+                if ($v->pivot->group_type == $this->group_studio) {
+                    $role['groups'][] = [
+                        'role_name' => $v->name,
+                        'studio_group_id' => $v->pivot->studio_id
+                    ];
+                } else {
+                    $role['studios'][] = [
+                        'role_name' => $v->name,
+                        'studio_id' => $v->pivot->studio_id
+                    ];
+                }
+            }
+        }
+
+        $cache->forget($cache_key);
+        if (isset($data)) {
+            $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+            return $role;
+        }
+        $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+
+        return $role;
     }
+
 
     protected function getStoredRole($role): Role
     {
@@ -516,18 +560,45 @@ trait HasRoles
 
         $cache->forget($cache_key);
         if (isset($data)) {
-            $cache->tags($cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
+            $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
             return true;
         }
-        $cache->put($cache_key, false, config('permission.cache.expiration_time'));
+        $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, false, config('permission.cache.expiration_time'));
         return false;
     }
 
-    public function getStudioInGroup($studio_ids, $group_ids)
+    public function getStudioInGroup($group_ids)
     {
         $studioGroupStudioClass = $this->getStudioGroupStudioClass();
 
-        return $studioGroupStudioClass->getStudioInGroup($studio_ids, $group_ids);
+        try {
+            $cache = $this->getCache();
+            $cache_tag = config('permission.cache.user_role_key');
+
+            if (is_array($group_ids)) {
+                $cache_key = $cache_tag . '.' . implode('.', $group_ids);
+            } else {
+                $cache_key = $cache_tag . '.' . $group_ids;
+            }
+            $data = $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studioGroupStudioClass, $group_ids) {
+                $query = $studioGroupStudioClass::query();
+                if (is_array($group_ids)) {
+                    $query->whereIn('studio_group_id', $group_ids);
+                } else {
+                    $query->where('studio_group_id', $group_ids);
+                }
+                return $query->get()->toArray();
+            });
+
+            if (count($data) > 0) {
+                return $data;
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     public function checkGroupHasAllStudio($group_ids)
