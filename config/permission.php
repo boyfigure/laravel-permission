@@ -31,7 +31,6 @@ return [
         'model_has_roles' => Offspring\Permission\Models\ModelHasRole::class,
         'studio_groups' => Offspring\Permission\Models\StudioGroup::class,
         'studio_group_studios' => Offspring\Permission\Models\StudioGroupStudio::class,
-        'studio' => App\Models\StudioStudio::class,
 
     ],
 
@@ -80,10 +79,7 @@ return [
 
         'studio_groups' => 'studio_groups',
 
-        'studio_group_studios' => 'studio_group_studios',
-
-        'studio' => 'studio_studios',
-        'studio_user_pivot' => 'profile_studios',
+        'studio_group_studios' => 'studio_group_studios'
     ],
 
     'column_names' => [
@@ -117,7 +113,7 @@ return [
          * When permissions or roles are updated the cache is flushed automatically.
          */
 
-        'expiration_time' => \DateInterval::createFromDateString('24 hours'),
+        'expiration_time' => 1440,
 
         /*
          * The cache key used to store all permissions.
@@ -129,10 +125,10 @@ return [
         'user_role_studio_group_key' => 'offspring.role.cache.user_role_studio_group_key',
         'user_studio_key' => 'offspring.role.cache.user_studio_key',
         'user_group_role_key' => 'offspring.role.cache.user_group_role_key',
+        'user_has_all_studio'  => 'offspring.role.cache.user_has_all_studio',
         'super_admin' => 'offspring.role.cache.super_admin',
         'all_cache_tags' => 'offspring.role.cache.all_cache_tags',
         'all_cache_by_user_tags' => 'offspring.role.cache.all_cache_by_user_tags',
-
         /*
          * When checking for a permission against a model by passing a Permission
          * instance to the check, this key determines what attribute on the

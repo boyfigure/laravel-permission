@@ -281,7 +281,6 @@ trait HasRoles
             return true;
         }
 
-        $cache = $this->getCache();
         if (is_string($roles) && false !== strpos($roles, '|')) {
             $roles = $this->convertPipeToArray($roles);
         }
@@ -301,8 +300,6 @@ trait HasRoles
             $modelHasRoleClass = $this->getModelHasRoleClass();
             $group = $modelHasRoleClass->getGroupByStudio($studio_id);
             //get user role
-//            $cache_tag = config('permission.cache.user_role_key');
-//            $cache_key = $cache_tag . '.' . $this->id . '.' . $studio_id;
 
             $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
                 if (!$group->isEmpty()) {
@@ -321,26 +318,6 @@ trait HasRoles
                 }
                 return $query;
             })->get();
-
-//            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id, $group) {
-//                return $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
-//                    if (!$group->isEmpty()) {
-//                        $group = $group->pluck('id')->toArray();
-//                        $query->where(function ($q) use ($group) {
-//                            $q->where('group_type', 1)
-//                                ->whereIn('studio_id', $group);
-//                        });
-//                        $query->orWhere(function ($q) use ($studio_id) {
-//                            $q->where('group_type', 0)
-//                                ->where('studio_id', $studio_id);
-//                        });
-//                    } else {
-//                        $query->where('group_type', 0)
-//                            ->where('studio_id', $studio_id);
-//                    }
-//                    return $query;
-//                })->get();
-//            });
         } else {
             $data = $this->roles;
         }
@@ -362,6 +339,18 @@ trait HasRoles
         }
 
         return $roles->intersect($guard ? $data->where('guard_name', $guard) : $data)->isNotEmpty();
+    }
+
+    public function hasStudio($studio_id): bool
+    {
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        if ($this->userHasAllStudio()) {
+            return true;
+        }
+
     }
 
     /**
@@ -501,7 +490,50 @@ trait HasRoles
 
     public function getUserStudio()
     {
+        $cache = $this->getCache();
+        $cache_tag = [
+            config('permission.cache.all_cache_tags'),
+            config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+            config('permission.cache.user_studio_key'),
+        ];
+        $cache_key = config('permission.cache.user_studio_key') . '.' . $this->id;
+        $result = $cache->tags($cache_tag)->get($cache_key);
+        if (isset($result)) {
+            return $result;
+        }
+        $cache->forget($cache_key);
+        $user_studio_ids = [];
+        $user_studio_group_ids = [];
 
+        $data = $this->roles()->get();
+        if (!$data->isEmpty()) {
+
+            foreach ($data as $k => $v) {
+                if ($v->pivot->group_type == $this->group_studio) {
+                    $user_studio_group_ids[] = $v->pivot->studio_id;
+                } else {
+                    $user_studio_ids[$v->pivot->studio_id] = $v->pivot->studio_id;
+                }
+            }
+            if (count($user_studio_group_ids) > 0) {
+                $studio_group_ids = $this->getStudioInGroup($user_studio_group_ids);
+
+                if (count($studio_group_ids) > 0) {
+                    foreach ($studio_group_ids as $k => $v) {
+                        $user_studio_ids[$v['studio_id']] = $v['studio_id'];
+                    }
+                }
+            }
+
+            if (count($user_studio_ids) > 0) {
+                $user_studio_ids = array_values($user_studio_ids);
+                $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+                return $user_studio_ids;
+            }
+        }
+
+        $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+        return $user_studio_ids;
     }
 
     public function flushCachedRole($cache_tag)
@@ -626,10 +658,32 @@ trait HasRoles
         }
     }
 
-    public function checkGroupHasAllStudio($group_ids)
+    public function userHasAllStudio()
     {
-        $studioGroupStudioClass = $this->getStudioGroupClass();
+        try {
+            $cache = $this->getCache();
+            $cache_tag = [
+                config('permission.cache.all_cache_tags'),
+                config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+                config('permission.cache.user_has_all_studio'),
+            ];
+            $cache_key = config('permission.cache.user_has_all_studio') . '.' . $this->id;
+            $result = $cache->tags($cache_tag)->get($cache_key);
+            if (isset($result)) {
+                return $result;
+            }
+            $studioGroupStudioClass = $this->getStudioGroupClass();
+            $data = $studioGroupStudioClass->userHasAllStudio();
+            if (isset($data)) {
+                $cache->tags($cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
+                return true;
+            }
 
-        return $studioGroupStudioClass->checkGroupHasAllStudio($group_ids);
+            $cache->tags($cache_tag)->put($cache_key, false, config('permission.cache.expiration_time'));
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+
     }
 }
