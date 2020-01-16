@@ -183,6 +183,7 @@ trait HasRoles
         }
 
         $this->forgetCachedPermissions();
+        $this->flushCachedRole(config('permission.cache.all_cache_by_user_tags') . '.' . $this->id);
 
         return $this;
     }
@@ -225,6 +226,7 @@ trait HasRoles
         $this->load('roles');
 
         $this->forgetCachedPermissions();
+        $this->flushCachedRole(config('permission.cache.all_cache_by_user_tags') . '.' . $this->id);
 
         return $this;
     }
@@ -299,8 +301,8 @@ trait HasRoles
             $modelHasRoleClass = $this->getModelHasRoleClass();
             $group = $modelHasRoleClass->getGroupByStudio($studio_id);
             //get user role
-            $cache_tag = config('permission.cache.user_role_key');
-            $cache_key = $cache_tag . '.' . $this->id . '.' . $studio_id;
+//            $cache_tag = config('permission.cache.user_role_key');
+//            $cache_key = $cache_tag . '.' . $this->id . '.' . $studio_id;
 
             $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
                 if (!$group->isEmpty()) {
@@ -449,12 +451,16 @@ trait HasRoles
         return $this->roles->pluck('name');
     }
 
-    public function getRoleAndStudio()
+    public function getRoleStudioGroup()
     {
         $cache = $this->getCache();
-        $cache_tag = config('permission.cache.user_studio_role_key');
-        $cache_key = $cache_tag . '.' . $this->id;
-        $result = $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->get($cache_key);
+        $cache_tag = [
+            config('permission.cache.all_cache_tags'),
+            config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+            config('permission.cache.user_role_studio_group_key'),
+        ];
+        $cache_key = config('permission.cache.user_role_studio_group_key') . '.' . $this->id;
+        $result = $cache->tags($cache_tag)->get($cache_key);
         if (isset($result)) {
             return $result;
         }
@@ -485,12 +491,24 @@ trait HasRoles
 
         $cache->forget($cache_key);
         if (isset($data)) {
-            $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+            $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
             return $role;
         }
-        $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+        $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
 
         return $role;
+    }
+
+    public function getUserStudio()
+    {
+
+    }
+
+    public function flushCachedRole($cache_tag)
+    {
+        $cache = $this->getCache();
+
+        return $cache->tags($cache_tag)->flush();
     }
 
 
@@ -545,9 +563,13 @@ trait HasRoles
     public function isSuperAdmin()
     {
         $cache = $this->getCache();
-        $cache_tag = md5(config('permission.cache.super_admin'));
-        $cache_key = $cache_tag . '.' . $this->id;
-        $result = $cache->get($cache_key);
+        $cache_tag = [
+            config('permission.cache.all_cache_tags'),
+            config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+            md5(config('permission.cache.super_admin')),
+        ];
+        $cache_key = md5(config('permission.cache.super_admin')) . '.' . $this->id;
+        $result = $cache->tags($cache_tag)->get($cache_key);
         if (isset($result)) {
             return $result;
         }
@@ -560,10 +582,10 @@ trait HasRoles
 
         $cache->forget($cache_key);
         if (isset($data)) {
-            $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
+            $cache->tags($cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
             return true;
         }
-        $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->put($cache_key, false, config('permission.cache.expiration_time'));
+        $cache->tags($cache_tag)->put($cache_key, false, config('permission.cache.expiration_time'));
         return false;
     }
 
@@ -573,14 +595,17 @@ trait HasRoles
 
         try {
             $cache = $this->getCache();
-            $cache_tag = config('permission.cache.user_role_key');
-
+            $cache_tag = [
+                config('permission.cache.all_cache_tags'),
+                config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+                config('permission.cache.user_studio_in_group_key'),
+            ];
             if (is_array($group_ids)) {
-                $cache_key = $cache_tag . '.' . implode('.', $group_ids);
+                $cache_key = config('permission.cache.user_studio_in_group_key') . '.' . implode('.', $group_ids);
             } else {
-                $cache_key = $cache_tag . '.' . $group_ids;
+                $cache_key = config('permission.cache.user_studio_in_group_key') . '.' . $group_ids;
             }
-            $data = $cache->tags(config('permission.cache.all_tags_cache'), $cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studioGroupStudioClass, $group_ids) {
+            $data = $cache->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studioGroupStudioClass, $group_ids) {
                 $query = $studioGroupStudioClass::query();
                 if (is_array($group_ids)) {
                     $query->whereIn('studio_group_id', $group_ids);

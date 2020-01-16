@@ -31,6 +31,7 @@ return [
         'model_has_roles' => Offspring\Permission\Models\ModelHasRole::class,
         'studio_groups' => Offspring\Permission\Models\StudioGroup::class,
         'studio_group_studios' => Offspring\Permission\Models\StudioGroupStudio::class,
+        'studio' => App\Models\StudioStudio::class,
 
     ],
 
@@ -79,7 +80,10 @@ return [
 
         'studio_groups' => 'studio_groups',
 
-        'studio_group_studios' => 'studio_group_studios'
+        'studio_group_studios' => 'studio_group_studios',
+
+        'studio' => 'studio_studios',
+        'studio_user_pivot' => 'profile_studios',
     ],
 
     'column_names' => [
@@ -120,12 +124,14 @@ return [
          */
 
         'key' => 'offspring.permission.cache',
-        'group_studio_key' => 'offspring.role.cache.group_studio',
-        'user_role_key' => 'offspring.role.cache.user_role',
-        'user_studio_role_key' => 'offspring.role.cache.user_studio_role',
+        'group_by_studio_key' => 'offspring.role.cache.group_studio',
+        'user_studio_in_group_key' => 'offspring.role.cache.user_studio_in_group_key',
+        'user_role_studio_group_key' => 'offspring.role.cache.user_role_studio_group_key',
+        'user_studio_key' => 'offspring.role.cache.user_studio_key',
         'user_group_role_key' => 'offspring.role.cache.user_group_role_key',
         'super_admin' => 'offspring.role.cache.super_admin',
-        'all_tags_cache' => 'offspring.role.cache.all_tags_cache',
+        'all_cache_tags' => 'offspring.role.cache.all_cache_tags',
+        'all_cache_by_user_tags' => 'offspring.role.cache.all_cache_by_user_tags',
 
         /*
          * When checking for a permission against a model by passing a Permission

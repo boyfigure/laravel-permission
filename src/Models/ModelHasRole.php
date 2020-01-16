@@ -128,10 +128,14 @@ class ModelHasRole extends Model implements ModelHasRoleContract
     public function getGroupByStudio($studio_id)
     {
         //check group
-        $cache_tag = config('permission.cache.group_studio_key');
-        $cache_key = $cache_tag . '.' . $studio_id;
+        $cache_tag = [
+            config('permission.cache.all_cache_tags'),
+            config('permission.cache.all_cache_by_user_tags').'.'.$this->id,
+            config('permission.cache.group_by_studio_key'),
+        ] ;
+        $cache_key = config('permission.cache.group_by_studio_key') . '.' . $studio_id;
 
-        $group = $this->getCache()->tags(config('permission.cache.all_tags_cache'),$cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id) {
+        $group = $this->getCache()->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id) {
             return StudioGroup::query()->whereHas('groupStudios', function ($q) use ($studio_id) {
                 $q->where('studio_id', $studio_id);
             })->orWhere('is_all_studio', 1)
