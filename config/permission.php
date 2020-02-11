@@ -123,6 +123,7 @@ return [
         'group_by_studio_key' => 'offspring.role.cache.group_studio',
         'user_studio_in_group_key' => 'offspring.role.cache.user_studio_in_group_key',
         'user_role_studio_group_key' => 'offspring.role.cache.user_role_studio_group_key',
+        'user_role_studio_key' => 'offspring.role.cache.user_role_studio_key',
         'user_studio_key' => 'offspring.role.cache.user_studio_key',
         'user_group_role_key' => 'offspring.role.cache.user_group_role_key',
         'user_has_all_studio'  => 'offspring.role.cache.user_has_all_studio',

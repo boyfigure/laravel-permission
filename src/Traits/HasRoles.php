@@ -488,6 +488,53 @@ trait HasRoles
         return $role;
     }
 
+    public function getRoleByStudio(){
+        $cache = $this->getCache();
+        $cache_tag = [
+            config('permission.cache.all_cache_tags'),
+            config('permission.cache.all_cache_by_user_tags') . '.' . $this->id,
+            config('permission.cache.user_role_studio_key'),
+        ];
+        $cache_key = config('permission.cache.user_role_studio_key') . '.' . $this->id;
+        $result = $cache->tags($cache_tag)->get($cache_key);
+        if (isset($result)) {
+            return $result;
+        }
+
+        $data = $this->getRoleStudioGroup();
+        $role = [
+            'is_empty' => true,
+            'studios' => [],
+            'groups' => []
+        ];
+
+        if (!$data->isEmpty()) {
+            $role['is_empty'] = false;
+            foreach ($data as $k => $v) {
+                if ($v->pivot->group_type == $this->group_studio) {
+                    $role['groups'][] = [
+                        'role_name' => $v->name,
+                        'studio_group_id' => $v->pivot->studio_id
+                    ];
+                } else {
+                    $role['studios'][] = [
+                        'role_name' => $v->name,
+                        'studio_id' => $v->pivot->studio_id
+                    ];
+                }
+            }
+        }
+
+        $cache->forget($cache_key);
+        if (isset($data)) {
+            $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+            return $role;
+        }
+        $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+
+        return $role;
+    }
+
     public function getUserStudio()
     {
         $cache = $this->getCache();
@@ -499,7 +546,7 @@ trait HasRoles
         $cache_key = config('permission.cache.user_studio_key') . '.' . $this->id;
         $result = $cache->tags($cache_tag)->get($cache_key);
         if (isset($result)) {
-            return $result;
+            //   return $result;
         }
         $cache->forget($cache_key);
         $user_studio_ids = [];
@@ -527,12 +574,12 @@ trait HasRoles
 
             if (count($user_studio_ids) > 0) {
                 $user_studio_ids = array_values($user_studio_ids);
-                $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+                //   $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
                 return $user_studio_ids;
             }
         }
 
-        $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+        //  $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
         return $user_studio_ids;
     }
 
