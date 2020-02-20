@@ -5,7 +5,6 @@ namespace Offspring\Permission\Traits;
 use Illuminate\Support\Collection;
 use Offspring\Permission\Contracts\Role;
 use Illuminate\Database\Eloquent\Builder;
-use Offspring\Permission\Models\StudioGroupStudio;
 use Offspring\Permission\PermissionRegistrar;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -488,7 +487,8 @@ trait HasRoles
         return $role;
     }
 
-    public function getRoleByStudio(){
+    public function getRoleByStudio()
+    {
         $cache = $this->getCache();
         $cache_tag = [
             config('permission.cache.all_cache_tags'),
@@ -501,38 +501,43 @@ trait HasRoles
             return $result;
         }
 
-        $data = $this->getRoleStudioGroup();
-        $role = [
-            'is_empty' => true,
-            'studios' => [],
-            'groups' => []
-        ];
+        $cache->forget($cache_key);
+        $user_studio_ids = [];
 
+        $data = $this->roles()->get();
         if (!$data->isEmpty()) {
-            $role['is_empty'] = false;
+
             foreach ($data as $k => $v) {
                 if ($v->pivot->group_type == $this->group_studio) {
-                    $role['groups'][] = [
-                        'role_name' => $v->name,
-                        'studio_group_id' => $v->pivot->studio_id
-                    ];
+                    $studio_group_ids = $this->getStudioInGroup($v->pivot->studio_id);
+                    if (count($studio_group_ids) > 0) {
+                        foreach ($studio_group_ids as $kg => $vg) {
+                            $user_studio_ids[$v->id . '-' . $vg['studio_id']] = [
+                                'role_id' => $v->id,
+                                'role_name' => $v->name,
+                                'studio_id' => $vg['studio_id']
+                            ];;
+                        }
+                    }
                 } else {
-                    $role['studios'][] = [
+                    $user_studio_ids[$v->id . '-' . $v->pivot->studio_id] = [
+                        'role_id' => $v->id,
                         'role_name' => $v->name,
                         'studio_id' => $v->pivot->studio_id
                     ];
                 }
             }
+
+            if (count($user_studio_ids) > 0) {
+                $user_studio_ids = array_values($user_studio_ids);
+                $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+                return $user_studio_ids;
+            }
         }
 
-        $cache->forget($cache_key);
-        if (isset($data)) {
-            $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
-            return $role;
-        }
-        $cache->tags($cache_tag)->put($cache_key, $role, config('permission.cache.expiration_time'));
+        $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+        return $user_studio_ids;
 
-        return $role;
     }
 
     public function getUserStudio()
@@ -546,7 +551,7 @@ trait HasRoles
         $cache_key = config('permission.cache.user_studio_key') . '.' . $this->id;
         $result = $cache->tags($cache_tag)->get($cache_key);
         if (isset($result)) {
-            //   return $result;
+               return $result;
         }
         $cache->forget($cache_key);
         $user_studio_ids = [];
@@ -574,12 +579,12 @@ trait HasRoles
 
             if (count($user_studio_ids) > 0) {
                 $user_studio_ids = array_values($user_studio_ids);
-                //   $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+                   $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
                 return $user_studio_ids;
             }
         }
 
-        //  $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+          $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
         return $user_studio_ids;
     }
 
