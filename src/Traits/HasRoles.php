@@ -725,7 +725,8 @@ trait HasRoles
                 return $result;
             }
             $studioGroupStudioClass = $this->getStudioGroupClass();
-            $data = $studioGroupStudioClass->userHasAllStudio();
+
+            $data = $studioGroupStudioClass->userHasAllStudio($this->id);
             if (isset($data)) {
                 $cache->tags($cache_tag)->put($cache_key, true, config('permission.cache.expiration_time'));
                 return true;
