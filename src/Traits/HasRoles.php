@@ -297,7 +297,7 @@ trait HasRoles
         if (isset($studio_id)) {
             //check group
             $modelHasRoleClass = $this->getModelHasRoleClass();
-            $group = $modelHasRoleClass->getGroupByStudio($studio_id);
+            $group = $modelHasRoleClass->getGroupByStudio($studio_id, $this->id);
             //get user role
 
             $data = $this->roles()->where(function (Builder $query) use ($studio_id, $group) {
@@ -551,7 +551,7 @@ trait HasRoles
         $cache_key = config('permission.cache.user_studio_key') . '.' . $this->id;
         $result = $cache->tags($cache_tag)->get($cache_key);
         if (isset($result)) {
-               return $result;
+            return $result;
         }
         $cache->forget($cache_key);
         $user_studio_ids = [];
@@ -579,12 +579,12 @@ trait HasRoles
 
             if (count($user_studio_ids) > 0) {
                 $user_studio_ids = array_values($user_studio_ids);
-                   $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+                $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
                 return $user_studio_ids;
             }
         }
 
-          $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
+        $cache->tags($cache_tag)->put($cache_key, $user_studio_ids, config('permission.cache.expiration_time'));
         return $user_studio_ids;
     }
 
@@ -641,7 +641,7 @@ trait HasRoles
         if (!$role) {
             return false;
         }
-        return $modelHasRoleClass->getFirstModelHasRoleByRole($model_type, $role->id, $studio_id);
+        return $modelHasRoleClass->getFirstModelHasRoleByRole($model_type, $role->id, $this->id, $studio_id);
     }
 
     public function isSuperAdmin()

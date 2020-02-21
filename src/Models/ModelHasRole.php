@@ -85,7 +85,7 @@ class ModelHasRole extends Model implements ModelHasRoleContract
         return $instance->getTable();
     }
 
-    public function getFirstModelHasRoleByRole($model_type, $role, $studio_id = null)
+    public function getFirstModelHasRoleByRole($model_type, $role, $user_id, $studio_id = null)
     {
         try {
 
@@ -94,7 +94,7 @@ class ModelHasRole extends Model implements ModelHasRoleContract
                 ->where('role_id', $role);
 
             if (isset($studio_id)) {
-                $group = $this->getGroupByStudio($studio_id);
+                $group = $this->getGroupByStudio($studio_id, $user_id);
 
                 $query->where(function (Builder $query) use ($studio_id, $group) {
                     if (!$group->isEmpty()) {
@@ -125,14 +125,14 @@ class ModelHasRole extends Model implements ModelHasRoleContract
         }
     }
 
-    public function getGroupByStudio($studio_id)
+    public function getGroupByStudio($studio_id, $user_id)
     {
         //check group
         $cache_tag = [
             config('permission.cache.all_cache_tags'),
-            config('permission.cache.all_cache_by_user_tags').'.'.$this->id,
+            config('permission.cache.all_cache_by_user_tags') . '.' . $user_id,
             config('permission.cache.group_by_studio_key'),
-        ] ;
+        ];
         $cache_key = config('permission.cache.group_by_studio_key') . '.' . $studio_id;
 
         $group = $this->getCache()->tags($cache_tag)->remember($cache_key, config('permission.cache.expiration_time'), function () use ($studio_id) {
